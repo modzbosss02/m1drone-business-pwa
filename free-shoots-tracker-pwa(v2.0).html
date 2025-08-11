@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Shoot Tracker">
+    <meta name="description" content="Free Shoots Campaign Tracker - Manage prospects and scale your videography business">
+    
+    <title>Shoot Tracker</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎥</text></svg>">
+    <link rel="apple-touch-icon" sizes="152x152" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎥</text></svg>">
+    <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎥</text></svg>">
+    <link rel="apple-touch-icon" sizes="167x167" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎥</text></svg>">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --primary: #00d4ff;
+            --secondary: #0099cc;
+            --accent: #ff6b35;
+            --success: #00ff88;
+            --warning: #ffaa00;
+            --danger: #ff4757;
+            --dark: #000000;
+            --darker: #0a0a0a;
+            --dark-gray: #1a1a1a;
+            --gray: #2a2a2a;
+            --light-gray: #3a3a3a;
+            --text: #ffffff;
+            --text-secondary: #cccccc;
+            --border: #333333;
+            --shadow: rgba(0, 0, 0, 0.5);
+            --glow: rgba(0, 212, 255, 0.3);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: var(--dark);
+            color: var(--text);
+            min-height: 100vh;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: var(--dark);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--dark) 0%, var(--darker) 100%);
+            color: var(--text);
+            padding: 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            margin-bottom: 5px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 0.9em;
+            opacity: 0.8;
+            color: var(--text-secondary);
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Dashboard Page */
+        .dashboard {
+            padding: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--gray);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px var(--shadow);
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .stat-card:hover::before {
+            left: 100%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px var(--shadow), 0 0 20px var(--glow);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px var(--glow);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .quick-action {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: var(--dark);
+            padding: 25px 20px;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 8px 32px var(--shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quick-action:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px var(--shadow), 0 0 20px var(--glow);
+        }
+
+        .quick-action-icon {
+            font-size: 2em;
+        }
+
+        .quick-action-text {
+            font-size: 0.9em;
+        }
+
+        .recent-prospects {
+            background: var(--gray);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .recent-prospects h3 {
+            color: var(--text);
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .prospect-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .prospect-item:last-child {
+            border-bottom: none;
+        }
+
+        .prospect-info h4 {
+            color: var(--text);
+            font-size: 1em;
+            margin-bottom: 5px;
+        }
+
+        .prospect-info p {
+            color: var(--text-secondary);
+            font-size: 0.85em;
+        }
+
+        .prospect-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .status-new { background: rgba(0, 212, 255, 0.2); color: var(--primary); border: 1px solid var(--primary); }
+        .status-contacted { background: rgba(255, 170, 0, 0.2); color: var(--warning); border: 1px solid var(--warning); }
+        .status-scheduled { background: rgba(0, 255, 136, 0.2); color: var(--success); border: 1px solid var(--success); }
+        .status-completed { background: rgba(255, 107, 53, 0.2); color: var(--accent); border: 1px solid var(--accent); }
+        .status-converted { background: rgba(0, 212, 255, 0.3); color: var(--primary); border: 1px solid var(--primary); }
+
+        /* Navigation */
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--dark-gray);
+            border-top: 1px solid var(--border);
+            padding: 10px 0;
+            padding-bottom: calc(10px + env(safe-area-inset-bottom));
+            display: flex;
+            justify-content: space-around;
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            color: var(--text-secondary);
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .nav-item:hover {
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            font-size: 1.5em;
+        }
+
+        .nav-text {
+            font-size: 0.7em;
+            font-weight: 500;
+        }
+
+        /* Content Area */
+        .content {
+            padding-bottom: 80px;
+        }
+
+        /* Form Styles */
+        .form-group {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-control {
+            padding: 15px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 1em;
+            background: var(--gray);
+            color: var(--text);
+            transition: all 0.3s ease;
+            -webkit-appearance: none;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--glow);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: var(--dark);
+            border: none;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px var(--glow);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-small {
+            padding: 10px 15px;
+            font-size: 0.85em;
+        }
+
+        .btn-secondary {
+            background: var(--gray);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--light-gray);
+        }
+
+        /* Table Styles */
+        .prospect-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--gray);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .prospect-table th {
+            background: var(--dark-gray);
+            color: var(--text);
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .prospect-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9em;
+        }
+
+        .prospect-table tr:hover {
+            background: var(--light-gray);
+        }
+
+        .priority {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+
+        .priority-high { background: rgba(255, 71, 87, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+        .priority-medium { background: rgba(255, 170, 0, 0.2); color: var(--warning); border: 1px solid var(--warning); }
+        .priority-low { background: rgba(0, 255, 136, 0.2); color: var(--success); border: 1px solid var(--success); }
+
+        .action-btn {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 6px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-right: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: var(--primary);
+            color: var(--dark);
+        }
+
+        /* Template Styles */
+        .templates {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .template-card {
+            background: var(--gray);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .template-card h3 {
+            color: var(--text);
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .template-preview {
+            background: var(--dark-gray);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 0.85em;
+            line-height: 1.5;
+            border-left: 4px solid var(--primary);
+            margin-bottom: 15px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .modal-content {
+            background: var(--gray);
+            margin: 10% auto;
+            padding: 25px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .close {
+            color: var(--text-secondary);
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close:hover {
+            color: var(--text);
+        }
+
+        /* Section Styles */
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: var(--text);
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section h2::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        /* Offline Indicator */
+        .offline-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--danger);
+            color: var(--text);
+            text-align: center;
+            padding: 10px;
+            font-size: 0.9em;
+            font-weight: 600;
+            z-index: 1001;
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .offline-indicator.show {
+            transform: translateY(0);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .prospect-table {
+                font-size: 0.8em;
+            }
+
+            .stat-number {
+                font-size: 1.5em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-group {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* iOS-specific styles */
+        @supports (-webkit-touch-callout: none) {
+            body {
+                padding-top: env(safe-area-inset-top);
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+        }
+
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--light-gray);
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-indicator" id="offlineIndicator">
+        📱 You're offline - Data will sync when connection returns
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🎥 Shoot Tracker</h1>
+            <p>Free Shoots Campaign Manager</p>
+        </div>
+
+        <div class="content">
+            <!-- Dashboard Page -->
+            <div class="page active" id="dashboard">
+                <div class="dashboard">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalProspects">0</div>
+                            <div class="stat-label">Total Prospects</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="shootsScheduled">0</div>
+                            <div class="stat-label">Scheduled</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="shootsCompleted">0</div>
+                            <div class="stat-label">Completed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="retainerConversions">0</div>
+                            <div class="stat-label">Conversions</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="conversionRate">0%</div>
+                            <div class="stat-label">Success Rate</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="monthlyRevenue">$0</div>
+                            <div class="stat-label">Monthly Revenue</div>
+                        </div>
+                    </div>
+
+                    <div class="quick-actions">
+                        <div class="quick-action" onclick="navigateTo('prospects')">
+                            <div class="quick-action-icon">📋</div>
+                            <div class="quick-action-text">View Prospects</div>
+                        </div>
+                        <div class="quick-action" onclick="navigateTo('add')">
+                            <div class="quick-action-icon">➕</div>
+                            <div class="quick-action-text">Add Prospect</div>
+                        </div>
+                        <div class="quick-action" onclick="navigateTo('templates')">
+                            <div class="quick-action-icon">📧</div>
+                            <div class="quick-action-text">Email Templates</div>
+                        </div>
+                        <div class="quick-action" onclick="navigateTo('goals')">
+                            <div class="quick-action-icon">🎯</div>
+                            <div class="quick-action-text">Weekly Goals</div>
+                        </div>
+                    </div>
+
+                    <div class="recent-prospects">
+                        <h3>Recent Prospects</h3>
+                        <div id="recentProspectsList">
+                            <div style="text-align: center; padding: 20px; color: var(--text-secondary);">
+                                No prospects yet. Add your first prospect to get started!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prospects Page -->
+            <div class="page" id="prospects">
+                <div class="dashboard">
+                    <div class="section">
+                        <h2>📋 All Prospects</h2>
+                        <div style="overflow-x: auto;">
+                            <table class="prospect-table">
+                                <thead>
+                                    <tr>
+                                        <th>Business</th>
+                                        <th>Contact</th>
+                                        <th>Type</th>
+                                        <th>Priority</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="prospectTableBody">
+                                    <tr>
+                                        <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                                            No prospects added yet. Add your first prospect to get started!
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Prospect Page -->
+            <div class="page" id="add">
+                <div class="dashboard">
+                    <div class="section">
+                        <h2>➕ Add New Prospect</h2>
+                        <div class="form-group">
+                            <input type="text" id="businessName" class="form-control" placeholder="Business Name">
+                            <input type="text" id="contactName" class="form-control" placeholder="Contact Name">
+                            <input type="email" id="email" class="form-control" placeholder="Email Address">
+                            <input type="tel" id="phone" class="form-control" placeholder="Phone Number">
+                            <select id="businessType" class="form-control">
+                                <option value="">Business Type</option>
+                                <option value="real-estate">Real Estate</option>
+                                <option value="restaurant">Restaurant</option>
+                                <option value="event-venue">Event Venue</option>
+                                <option value="fitness">Fitness/Wellness</option>
+                                <option value="retail">Retail</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <select id="priority" class="form-control">
+                                <option value="medium">Medium Priority</option>
+                                <option value="high">High Priority</option>
+                                <option value="low">Low Priority</option>
+                            </select>
+                        </div>
+                        <textarea id="notes" class="form-control" placeholder="Notes (unique features, best contact time, etc.)" rows="3" style="width: 100%; margin-bottom: 15px;"></textarea>
+                        <button class="btn" onclick="addProspect()">Add Prospect</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Templates Page -->
+            <div class="page" id="templates">
+                <div class="dashboard">
+                    <div class="section">
+                        <h2>📧 Email Templates</h2>
+                        <div class="templates">
+                            <div class="template-card">
+                                <h3>🏠 Real Estate Agent</h3>
+                                <div class="template-preview">
+                                    <strong>Subject:</strong> FREE Drone Video for [Property]<br><br>
+                                    <strong>Body:</strong> Hi [Name], I noticed your listing at [Address] and thought you'd love to see it from a stunning aerial perspective...
+                                </div>
+                                <button class="btn btn-small" onclick="copyTemplate('realEstate')">Copy Template</button>
+                            </div>
+
+                            <div class="template-card">
+                                <h3>🍽️ Restaurant/Venue</h3>
+                                <div class="template-preview">
+                                    <strong>Subject:</strong> Transform Your Venue Marketing<br><br>
+                                    <strong>Body:</strong> Hi [Name], Your venue has incredible visual potential, and I'd love to help you showcase it...
+                                </div>
+                                <button class="btn btn-small" onclick="copyTemplate('restaurant')">Copy Template</button>
+                            </div>
+
+                            <div class="template-card">
+                                <h3>🏢 General Business</h3>
+                                <div class="template-preview">
+                                    <strong>Subject:</strong> FREE Professional Video for [Business]<br><br>
+                                    <strong>Body:</strong> Hi [Name], I'm offering complimentary promotional videos to select [City] businesses...
+                                </div>
+                                <button class="btn btn-small" onclick="copyTemplate('general')">Copy Template</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Goals Page -->
+            <div class="page" id="goals">
+                <div class="dashboard">
+                    <div class="section">
+                        <h2>🎯 Weekly Goals</h2>
+                        <div class="recent-prospects">
+                            <h3>This Week's Targets</h3>
+                            <ul style="list-style: none; padding: 0;">
+                                <li style="padding: 12px 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px;">
+                                    <span style="color: var(--primary);">📧</span> Send 50 outreach emails
+                                </li>
+                                <li style="padding: 12px 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px;">
+                                    <span style="color: var(--warning);">📞</span> Make 20 follow-up calls
+                                </li>
+                                <li style="padding: 12px 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px;">
+                                    <span style="color: var(--success);">🎬</span> Complete 2-3 shoots
+                                </li>
+                                <li style="padding: 12px 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px;">
+                                    <span style="color: var(--accent);">💰</span> Convert 1-2 to retainers
+                                </li>
+                                <li style="padding: 12px 0; display: flex; align-items: center; gap: 10px;">
+                                    <span style="color: var(--primary);">📈</span> Track all metrics daily
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Bar -->
+        <div class="nav-bar">
+            <div class="nav-item active" onclick="navigateTo('dashboard')">
+                <div class="nav-icon">🏠</div>
+                <div class="nav-text">Dashboard</div>
+            </div>
+            <div class="nav-item" onclick="navigateTo('prospects')">
+                <div class="nav-icon">📋</div>
+                <div class="nav-text">Prospects</div>
+            </div>
+            <div class="nav-item" onclick="navigateTo('add')">
+                <div class="nav-icon">➕</div>
+                <div class="nav-text">Add</div>
+            </div>
+            <div class="nav-item" onclick="navigateTo('templates')">
+                <div class="nav-icon">📧</div>
+                <div class="nav-text">Templates</div>
+            </div>
+            <div class="nav-item" onclick="navigateTo('goals')">
+                <div class="nav-icon">🎯</div>
+                <div class="nav-text">Goals</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for status updates -->
+    <div id="statusModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Update Prospect Status</h2>
+            <div class="form-group">
+                <select id="newStatus" class="form-control">
+                    <option value="new">New</option>
+                    <option value="contacted">Contacted</option>
+                    <option value="scheduled">Scheduled</option>
+                    <option value="completed">Completed</option>
+                    <option value="converted">Converted</option>
+                </select>
+                <input type="date" id="lastContactDate" class="form-control">
+            </div>
+            <button class="btn" onclick="updateStatus()">Update Status</button>
+        </div>
+    </div>
+
+    <script>
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch(registrationError => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+
+        // Data storage with sync capability
+        let prospects = JSON.parse(localStorage.getItem('prospects')) || [];
+        let currentProspectId = null;
+        let isOnline = navigator.onLine;
+        let currentPage = 'dashboard';
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDashboard();
+            renderProspects();
+            renderRecentProspects();
+            checkOnlineStatus();
+            
+            // Add online/offline listeners
+            window.addEventListener('online', handleOnline);
+            window.addEventListener('offline', handleOffline);
+        });
+
+        // Navigation functions
+        function navigateTo(page) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            
+            // Show selected page
+            document.getElementById(page).classList.add('active');
+            
+            // Update navigation
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            currentPage = page;
+            
+            // Haptic feedback
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+        }
+
+        // Online/Offline handling
+        function checkOnlineStatus() {
+            const indicator = document.getElementById('offlineIndicator');
+            if (!navigator.onLine) {
+                indicator.classList.add('show');
+            } else {
+                indicator.classList.remove('show');
+            }
+        }
+
+        function handleOnline() {
+            isOnline = true;
+            document.getElementById('offlineIndicator').classList.remove('show');
+            syncData();
+        }
+
+        function handleOffline() {
+            isOnline = false;
+            document.getElementById('offlineIndicator').classList.add('show');
+        }
+
+        function syncData() {
+            // In a real app, this would sync with a server
+            console.log('Syncing data...');
+        }
+
+        // Add new prospect
+        function addProspect() {
+            const businessName = document.getElementById('businessName').value;
+            const contactName = document.getElementById('contactName').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const businessType = document.getElementById('businessType').value;
+            const priority = document.getElementById('priority').value;
+            const notes = document.getElementById('notes').value;
+
+            if (!businessName || !contactName || !email) {
+                alert('Please fill in at least Business Name, Contact Name, and Email');
+                return;
+            }
+
+            const prospect = {
+                id: Date.now(),
+                businessName,
+                contactName,
+                email,
+                phone,
+                businessType,
+                priority,
+                notes,
+                status: 'new',
+                lastContact: new Date().toISOString().split('T')[0],
+                createdAt: new Date().toISOString()
+            };
+
+            prospects.push(prospect);
+            saveProspects();
+            updateDashboard();
+            renderProspects();
+            renderRecentProspects();
+            clearForm();
+            
+            // Navigate back to dashboard
+            navigateTo('dashboard');
+            
+            // Haptic feedback
+            if (navigator.vibrate) {
+                navigator.vibrate(100);
+            }
+        }
+
+        // Clear form
+        function clearForm() {
+            document.getElementById('businessName').value = '';
+            document.getElementById('contactName').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('phone').value = '';
+            document.getElementById('businessType').value = '';
+            document.getElementById('priority').value = 'medium';
+            document.getElementById('notes').value = '';
+        }
+
+        // Render recent prospects
+        function renderRecentProspects() {
+            const container = document.getElementById('recentProspectsList');
+            
+            if (prospects.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">No prospects yet. Add your first prospect to get started!</div>';
+                return;
+            }
+
+            const recentProspects = prospects.slice(-3).reverse(); // Get last 3 prospects
+            
+            container.innerHTML = recentProspects.map(prospect => `
+                <div class="prospect-item">
+                    <div class="prospect-info">
+                        <h4>${prospect.businessName}</h4>
+                        <p>${prospect.contactName} • ${prospect.businessType || 'Not specified'}</p>
+                    </div>
+                    <span class="prospect-status status-${prospect.status}">${prospect.status}</span>
+                </div>
+            `).join('');
+        }
+
+        // Render prospects table
+        function renderProspects() {
+            const tbody = document.getElementById('prospectTableBody');
+            
+            if (prospects.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-secondary);">No prospects added yet. Add your first prospect to get started!</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = prospects.map(prospect => `
+                <tr>
+                    <td><strong>${prospect.businessName}</strong><br><small>${prospect.email}</small></td>
+                    <td>${prospect.contactName}<br><small>${prospect.phone || 'No phone'}</small></td>
+                    <td>${prospect.businessType || 'Not specified'}</td>
+                    <td><span class="priority priority-${prospect.priority}">${prospect.priority}</span></td>
+                    <td><span class="status status-${prospect.status}">${prospect.status}</span></td>
+                    <td>
+                        <button class="action-btn" onclick="openStatusModal(${prospect.id})">Update</button>
+                        <button class="action-btn" onclick="deleteProspect(${prospect.id})">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Update dashboard stats
+        function updateDashboard() {
+            const totalProspects = prospects.length;
+            const shootsScheduled = prospects.filter(p => p.status === 'scheduled').length;
+            const shootsCompleted = prospects.filter(p => p.status === 'completed').length;
+            const retainerConversions = prospects.filter(p => p.status === 'converted').length;
+            const conversionRate = totalProspects > 0 ? Math.round((retainerConversions / totalProspects) * 100) : 0;
+            const monthlyRevenue = retainerConversions * 1500; // Assuming $1500 average retainer
+
+            document.getElementById('totalProspects').textContent = totalProspects;
+            document.getElementById('shootsScheduled').textContent = shootsScheduled;
+            document.getElementById('shootsCompleted').textContent = shootsCompleted;
+            document.getElementById('retainerConversions').textContent = retainerConversions;
+            document.getElementById('conversionRate').textContent = conversionRate + '%';
+            document.getElementById('monthlyRevenue').textContent = '$' + monthlyRevenue.toLocaleString();
+        }
+
+        // Save prospects to localStorage
+        function saveProspects() {
+            localStorage.setItem('prospects', JSON.stringify(prospects));
+            if (isOnline) {
+                syncData();
+            }
+        }
+
+        // Delete prospect
+        function deleteProspect(id) {
+            if (confirm('Are you sure you want to delete this prospect?')) {
+                prospects = prospects.filter(p => p.id !== id);
+                saveProspects();
+                updateDashboard();
+                renderProspects();
+                renderRecentProspects();
+                
+                // Haptic feedback
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+            }
+        }
+
+        // Modal functions
+        function openStatusModal(id) {
+            currentProspectId = id;
+            document.getElementById('statusModal').style.display = 'block';
+            document.getElementById('lastContactDate').value = new Date().toISOString().split('T')[0];
+        }
+
+        function closeModal() {
+            document.getElementById('statusModal').style.display = 'none';
+            currentProspectId = null;
+        }
+
+        function updateStatus() {
+            const newStatus = document.getElementById('newStatus').value;
+            const lastContact = document.getElementById('lastContactDate').value;
+            
+            const prospect = prospects.find(p => p.id === currentProspectId);
+            if (prospect) {
+                prospect.status = newStatus;
+                prospect.lastContact = lastContact;
+                saveProspects();
+                updateDashboard();
+                renderProspects();
+                renderRecentProspects();
+                closeModal();
+                
+                // Haptic feedback
+                if (navigator.vibrate) {
+                    navigator.vibrate(100);
+                }
+            }
+        }
+
+        // Email template functions
+        function copyTemplate(type) {
+            let template = '';
+            
+            switch(type) {
+                case 'realEstate':
+                    template = `Subject: FREE Drone Video for [Property] - Showcase Your Listing Like Never Before
+
+Hi [Name],
+
+I noticed your listing at [Address] and thought you'd love to see it from a stunning aerial perspective. I'm offering complimentary drone footage to select real estate agents in [City] to help showcase properties in a way that sets them apart.
+
+This free video would include:
+• Cinematic aerial shots of the property
+• Smooth transitions highlighting key features
+• Professional editing ready for social media
+• 30-60 second teaser perfect for listings
+
+Would you be interested in a free shoot this week? I have availability on [Date] and [Date].
+
+Best regards,
+[Your Name]`;
+                    break;
+                    
+                case 'restaurant':
+                    template = `Subject: Transform Your Venue Marketing with FREE Cinematic Footage
+
+Hi [Name],
+
+Your venue has incredible visual potential, and I'd love to help you showcase it. I'm offering complimentary promotional videos to select [City] businesses to build my portfolio.
+
+This free video would include:
+• Cinematic shots of your venue/restaurant
+• Food/atmosphere highlights
+• Professional editing for social media
+• 30-second teaser perfect for marketing
+
+Would you be interested in a free shoot this week? I have availability on [Date] and [Date].
+
+Best regards,
+[Your Name]`;
+                    break;
+                    
+                case 'general':
+                    template = `Subject: FREE Professional Video for [Business] - 30-Second Social Media Teaser
+
+Hi [Name],
+
+I'm offering complimentary promotional videos to select [City] businesses to build my portfolio. Your [Business Type] would look amazing on video!
+
+This free video would include:
+• Professional cinematography
+• Highlighting your unique features
+• Social media ready format
+• 30-second teaser perfect for marketing
+
+Would you be interested in a free shoot this week? I have availability on [Date] and [Date].
+
+Best regards,
+[Your Name]`;
+                    break;
+            }
+            
+            navigator.clipboard.writeText(template).then(() => {
+                alert('Template copied to clipboard!');
+                // Haptic feedback
+                if (navigator.vibrate) {
+                    navigator.vibrate(100);
+                }
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = template;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('Template copied to clipboard!');
+            });
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('statusModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Prevent zoom on double tap
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    </script>
+    ... (all previous content remains unchanged above) ...
+
+    <!-- Voiceflow AI Chat Widget -->
+    <script type="text/javascript">
+      (function(d, t) {
+          var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
+          v.onload = function() {
+            window.voiceflow.chat.load({
+              verify: { projectID: '688ae906bea11b930c5c821e' },
+              url: 'https://general-runtime.voiceflow.com',
+              versionID: 'production',
+              voice: {
+                url: "https://runtime-api.voiceflow.com"
+              }
+            });
+          }
+          v.src = "https://cdn.voiceflow.com/widget-next/bundle.mjs"; v.type = "text/javascript"; s.parentNode.insertBefore(v, s);
+      })(document, 'script');
+    </script>
+</body>
+</html>
+</body>
+</html> 
